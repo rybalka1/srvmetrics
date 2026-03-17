@@ -92,6 +92,32 @@ git add .github
 git commit -m "Update workflows from template"
 ```
 
+## Обязательная проверка после обновления `.github`
+
+После команды:
+
+```bash
+git checkout template/main -- .github
+```
+
+нужно отдельно проверить [`mertricstest.yml`](../.github/workflows/mertricstest.yml).
+
+В этом репозитории шаг:
+
+```bash
+go install golang.org/x/tools/cmd/goimports@latest
+```
+
+ломает CI, потому что `@latest` сейчас требует Go `>= 1.25`, а workflow Практикума запускается на Go `1.24`.
+
+Рабочий вариант для этого репозитория:
+
+```bash
+go install golang.org/x/tools/cmd/goimports@v0.42.0
+```
+
+Если после обновления шаблона снова вернулся `@latest`, его нужно сразу заменить обратно на `@v0.42.0` перед коммитом.
+
 ## Что важно в этом репозитории
 
 - автотесты ожидают структуру, совместимую с шаблоном Практикума
