@@ -1,59 +1,68 @@
-// internal/handlers/handlers.go
 package handlers
 
 import (
-	"github.com/rybalka1/srvmetrics/internal/storage"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/rybalka1/srvmetrics/internal/storage"
 )
 
-var memStorage *storage.MemStorage
-
-func SetStorage(storage *storage.MemStorage) {
-	memStorage = storage
+type Handler struct {
+	storage *storage.MemStorage
 }
 
-func UpdateMetric(w http.ResponseWriter, r *http.Request) {
+func NewHandler(storage *storage.MemStorage) *Handler {
+	return &Handler{storage: storage}
+}
+
+func (h *Handler) UpdateMetric(rw http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 5 {
-		http.Error(w, "Not found", http.StatusNotFound)
+	pieces := strings.Split(r.URL.Path, "/")
+	if len(pieces) != 5 {
+		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	metricType := pathParts[3]
-	metricName := pathParts[4]
-
-	if metricType != "gauge" && metricType != "counter" {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+	if pieces[1] != "update" {
+		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	var value interface{}
-	var err error
+	mType := pieces[2]
+	mName := pieces[3]
+	mValue := pieces[4]
 
-	switch metricType {
+	if mName == "" {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	switch mType {
 	case "gauge":
-		value, err = strconv.ParseFloat(metricName, 64)
+		val, err := strconv.ParseFloat(mValue, 64)
 		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		memStorage.SetGauge(metricName, value.(float64))
+		h.storage.UpdateGauge(mName, val)
 
 	case "counter":
-		value, err = strconv.ParseInt(metricName, 10, 64)
+		val, err := strconv.ParseInt(mValue, 10, 64)
 		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		memStorage.AddCounter(metricName, value.(int64))
+		h.storage.UpdateCounter(mName, val)
+
+	default:
+		rw.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	rw.WriteHeader(http.StatusOK)
 }

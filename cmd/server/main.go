@@ -1,19 +1,18 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/rybalka1/srvmetrics/internal/handlers"
 	"github.com/rybalka1/srvmetrics/internal/storage"
-	"net/http"
 )
 
 func main() {
-	storage := storage.NewMemStorage()
-	handlers.SetStorage(storage)
+	st := storage.NewMemStorage()
 
+	h := handlers.NewHandler(st)
 	mux := http.NewServeMux()
-	mux.HandleFunc(`/api`, handlers.ApiPage)
-	mux.HandleFunc(`/`, handlers.MainPage)
-	mux.HandleFunc(`/update/`, handlers.UpdateMetric)
+	mux.HandleFunc(`/update/`, h.UpdateMetric)
 
 	err := http.ListenAndServe(`:8080`, mux)
 	if err != nil {

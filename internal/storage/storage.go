@@ -1,41 +1,21 @@
-// internal/storage/storage.go
 package storage
 
-import "sync"
-
 type MemStorage struct {
-	metrics map[string]any
-	mu      sync.Mutex
+	gauges   map[string]float64
+	counters map[string]int64
 }
 
 func NewMemStorage() *MemStorage {
 	return &MemStorage{
-		metrics: make(map[string]any),
+		gauges:   make(map[string]float64),
+		counters: make(map[string]int64),
 	}
 }
 
-func (s *MemStorage) GetMetric(name string) (any, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	value, ok := s.metrics[name]
-	return value, ok
+func (ms *MemStorage) UpdateGauge(name string, value float64) {
+	ms.gauges[name] = value
 }
 
-func (s *MemStorage) SetGauge(name string, value float64) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.metrics[name] = value
-}
-
-func (s *MemStorage) AddCounter(name string, value int64) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if existing, ok := s.metrics[name].(int64); ok {
-		s.metrics[name] = existing + value
-	} else {
-		s.metrics[name] = value
-	}
+func (ms *MemStorage) UpdateCounter(name string, value int64) {
+	ms.counters[name] += value
 }
