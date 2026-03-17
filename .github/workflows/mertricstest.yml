@@ -52,6 +52,11 @@ jobs:
           mv $GITHUB_WORKSPACE/.tools/metricstest /usr/local/bin/metricstest
           mv $GITHUB_WORKSPACE/.tools/random /usr/local/bin/random
 
+      - name: Setup go deps
+        run: |
+          go install golang.org/x/tools/cmd/goimports@latest
+
+
       - name: Build server binary
         run: |
           cd cmd/server
@@ -79,21 +84,6 @@ jobs:
             -binary-path=cmd/server/server
 
       - name: Build agent binary
-        if: |
-          github.ref == 'refs/heads/main' ||
-          github.head_ref == 'iter2' ||
-          github.head_ref == 'iter3' ||
-          github.head_ref == 'iter4' ||
-          github.head_ref == 'iter5' ||
-          github.head_ref == 'iter6' ||
-          github.head_ref == 'iter7' ||
-          github.head_ref == 'iter8' ||
-          github.head_ref == 'iter9' ||
-          github.head_ref == 'iter10' ||
-          github.head_ref == 'iter11' ||
-          github.head_ref == 'iter12' ||
-          github.head_ref == 'iter13' ||
-          github.head_ref == 'iter14'
         run: |
           cd cmd/agent
           go build -buildvcs=false  -o agent
