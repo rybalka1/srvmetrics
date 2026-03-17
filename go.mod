@@ -1,3 +1,3 @@
 module github.com/rybalka1/srvmetrics
 
-go 1.24
+go 1.25
